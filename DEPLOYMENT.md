@@ -67,8 +67,37 @@ git push -u origin main
 
 - `index.html` 在项目根目录，Vercel 可直接作为静态入口。
 - `package.json` 存在，脚本包含 `dev`、`build`、`deploy`。
+- `vercel.json` 已明确设置 `outputDirectory` 为 `.`，让 Vercel 从项目根目录发布静态网页。
 - `vercel.json` 仅设置静态站点基础响应头和 URL 风格，不依赖服务端函数。
 - 项目不依赖外部构建工具，不需要 `npm install` 即可运行页面。
+
+## 如果出现 public 目录错误
+
+如果 Vercel 报错：
+
+```text
+No Output Directory named "public" found after the Build completed.
+```
+
+说明 Vercel 项目设置里仍把 Output Directory 指向了 `public`。本项目没有 `public/`，静态文件位于根目录。请在 Vercel Dashboard 中进入：
+
+```text
+Project Settings -> Build & Development Settings -> Output Directory
+```
+
+将 Output Directory 改成：
+
+```text
+.
+```
+
+或清空该字段，然后重新部署。当前仓库里的 `vercel.json` 已写入：
+
+```json
+{
+  "outputDirectory": "."
+}
+```
 
 ## 部署后验证
 
