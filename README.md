@@ -1,6 +1,6 @@
 # Offer 捕手
 
-「Offer 捕手」是一个学生求职匹配智能体 Demo。它通过简历文本、岗位 JD、求职方向和城市偏好，调用 OpenAI API 完成真实岗位匹配评分、匹配原因解释、简历缺口诊断、改写建议、可复制 bullet points、投递行动清单和 offer 投递进度追踪。
+「Offer 捕手」是一个学生求职匹配智能体 Demo。它通过简历文本、岗位 JD、求职方向和城市偏好，调用 Gemini API 完成真实岗位匹配评分、匹配原因解释、简历缺口诊断、改写建议、可复制 bullet points、投递行动清单和 offer 投递进度追踪。
 
 ## 本地运行
 
@@ -18,10 +18,10 @@ python3 -m http.server 8080
 
 访问 `http://localhost:8080`。
 
-如果要在本地测试 OpenAI API 路由，请使用 Vercel CLI：
+如果要在本地测试 Gemini API 路由，请使用 Vercel CLI：
 
 ```bash
-OPENAI_API_KEY=你的_key vercel dev
+GEMINI_API_KEY=你的_key vercel dev
 ```
 
 ## 公网部署
@@ -36,6 +36,6 @@ OPENAI_API_KEY=你的_key vercel dev
 
 ## 主要功能
 
-- AI 匹配：基于学生简历和岗位 JD 调用 `/api/match` 返回真实分析。
+- AI 匹配：基于学生简历和岗位 JD 调用 Gemini API，由 `/api/match` 返回真实分析。
 - 简历优化：展示优势信号、缺口提醒、可直接使用的改写建议和 bullet points。
 - 投递追踪：记录学生姓名、届别/批次、公司、岗位、状态和备注，支持状态更新与删除，数据保存在浏览器本地。

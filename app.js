@@ -119,7 +119,7 @@ function setLoading(isLoading) {
 function renderInitialState() {
   setDial(0);
   elements.summaryTitle.textContent = "等待 AI 匹配";
-  elements.summaryText.textContent = "系统会把简历与岗位 JD 发送到后端，由 OpenAI API 返回结构化匹配分析。";
+  elements.summaryText.textContent = "系统会把简历与岗位 JD 发送到后端，由 Gemini API 返回结构化匹配分析。";
   elements.jobCards.innerHTML = `<div class="loading-state">请粘贴岗位 JD 后点击「开始匹配」。分析结果会包含匹配度、推荐投递等级、优势、缺口和可复制简历 bullet points。</div>`;
   elements.strengths.innerHTML = "";
   elements.gaps.innerHTML = "";
@@ -195,7 +195,7 @@ async function runMatch() {
   }
 
   setLoading(true);
-  elements.jobCards.innerHTML = `<div class="loading-state">OpenAI 正在分析简历与 JD，请稍等。</div>`;
+  elements.jobCards.innerHTML = `<div class="loading-state">Gemini 正在分析简历与 JD，请稍等。</div>`;
 
   try {
     const response = await fetch("/api/match", {
@@ -218,7 +218,7 @@ async function runMatch() {
     setDial(0);
     elements.summaryTitle.textContent = "AI 匹配失败";
     elements.summaryText.textContent = error.message;
-    elements.jobCards.innerHTML = `<div class="loading-state">${escapeHtml(error.message)}。请确认 Vercel 环境变量 OPENAI_API_KEY 已配置，然后重新部署。</div>`;
+    elements.jobCards.innerHTML = `<div class="loading-state">${escapeHtml(error.message)}。请确认 Vercel 环境变量 GEMINI_API_KEY 已配置，然后重新部署。</div>`;
   } finally {
     setLoading(false);
   }
