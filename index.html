@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offer 捕手 - 学生求职匹配智能体</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace">
+        <aside class="panel input-panel" aria-label="学生画像输入">
+          <div class="brand">
+            <div class="brand-mark">O</div>
+            <div>
+              <h1>Offer 捕手</h1>
+              <p>学生求职匹配智能体</p>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>目标方向</span>
+            <select id="targetRole">
+              <option value="data">数据分析 / 商业分析</option>
+              <option value="product">产品经理 / 产品运营</option>
+              <option value="frontend">前端开发 / 全栈开发</option>
+              <option value="consulting">咨询 / 战略 / 市场研究</option>
+            </select>
+          </label>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>学历阶段</span>
+              <select id="degree">
+                <option>本科</option>
+                <option>硕士</option>
+                <option>博士</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>求职城市</span>
+              <select id="city">
+                <option>上海</option>
+                <option>北京</option>
+                <option>深圳</option>
+                <option>杭州</option>
+                <option>远程</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>简历文本</span>
+            <textarea id="resumeInput" spellcheck="false"></textarea>
+          </label>
+
+          <div class="actions">
+            <button id="sampleBtn" type="button" class="secondary">填入示例</button>
+            <button id="matchBtn" type="button">开始匹配</button>
+          </div>
+        </aside>
+
+        <section class="results" aria-live="polite">
+          <div class="summary-band">
+            <div>
+              <p class="eyebrow">智能诊断</p>
+              <h2 id="summaryTitle">等待简历输入</h2>
+              <p id="summaryText">系统会基于技能、项目经历、岗位偏好和城市约束，给出岗位排序与简历优化建议。</p>
+            </div>
+            <div class="score-dial">
+              <span id="topScore">--</span>
+              <small>最高匹配</small>
+            </div>
+          </div>
+
+          <nav class="tabs" aria-label="结果视图">
+            <button class="tab active" data-tab="jobs" type="button">岗位匹配</button>
+            <button class="tab" data-tab="resume" type="button">简历优化</button>
+            <button class="tab" data-tab="plan" type="button">行动清单</button>
+            <button class="tab" data-tab="tracker" type="button">投递追踪</button>
+          </nav>
+
+          <section id="jobs" class="tab-panel active">
+            <div id="jobCards" class="job-list"></div>
+          </section>
+
+          <section id="resume" class="tab-panel">
+            <div class="insight-grid">
+              <article>
+                <h3>优势信号</h3>
+                <ul id="strengthList"></ul>
+              </article>
+              <article>
+                <h3>缺口提醒</h3>
+                <ul id="gapList"></ul>
+              </article>
+            </div>
+            <article class="rewrite-box">
+              <h3>简历改写建议</h3>
+              <div id="rewriteList"></div>
+            </article>
+          </section>
+
+          <section id="plan" class="tab-panel">
+            <ol id="actionPlan" class="action-list"></ol>
+          </section>
+
+          <section id="tracker" class="tab-panel">
+            <form id="applicationForm" class="tracker-form">
+              <label class="field">
+                <span>学生</span>
+                <input id="studentName" type="text" value="Joyce" placeholder="Joyce" />
+              </label>
+              <label class="field">
+                <span>届别 / 批次</span>
+                <input id="studentBatch" type="text" value="27届秋招" placeholder="27届秋招" />
+              </label>
+              <label class="field">
+                <span>公司</span>
+                <input id="applicationCompany" type="text" placeholder="例如：星链零售科技" />
+              </label>
+              <label class="field">
+                <span>岗位</span>
+                <input id="applicationRole" type="text" placeholder="例如：商业分析实习生" />
+              </label>
+              <label class="field">
+                <span>状态</span>
+                <select id="applicationStatus">
+                  <option>已投递</option>
+                  <option>测评中</option>
+                  <option>一面</option>
+                  <option>二面</option>
+                  <option>终面</option>
+                  <option>Offer</option>
+                  <option>已挂</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>备注</span>
+                <input id="applicationNote" type="text" placeholder="例如：6月5日前完成测评" />
+              </label>
+              <button id="addApplicationBtn" type="submit">添加记录</button>
+            </form>
+
+            <div id="trackerStats" class="tracker-stats"></div>
+            <div id="applicationList" class="application-list"></div>
+          </section>
+        </section>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
