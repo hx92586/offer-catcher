@@ -55,13 +55,8 @@ const defaultApplications = [
 ];
 
 const fallbackAnalysis = {
-  matchScore: 0,
-  applicationLevel: "等待分析",
-  summary: "输入简历文本和岗位 JD 后，AI 会生成真实匹配分析。",
-  matchingAdvantages: [],
-  skillGaps: [],
+  jobs: [],
   resumeSuggestions: [],
-  bulletPoints: [],
   actionPlan: []
 };
 
@@ -130,27 +125,30 @@ function renderInitialState() {
 
 function renderAnalysis(analysis) {
   const result = { ...fallbackAnalysis, ...analysis };
-  const score = Number(result.matchScore) || 0;
+  const topJob = ensureArray(result.jobs)[0] || {};
+  const score = Number(topJob.matchScore) || 0;
+  const applicationLevel = topJob.applicationLevel || "等待分析";
+  const summary = topJob.summary || "AI 已完成简历与岗位 JD 的匹配分析。";
   setDial(score);
-  elements.summaryTitle.textContent = `${result.applicationLevel} · ${score}%`;
-  elements.summaryText.textContent = result.summary || "AI 已完成简历与岗位 JD 的匹配分析。";
+  elements.summaryTitle.textContent = `${applicationLevel} · ${score}%`;
+  elements.summaryText.textContent = summary;
 
   elements.jobCards.innerHTML = `<article class="job-card ai-card">
     <div class="job-head">
       <div>
-        <div class="job-title">AI 匹配结论</div>
+        <div class="job-title">${escapeHtml(topJob.title || "AI 匹配结论")}</div>
         <p class="job-meta">${escapeHtml(elements.degree.value)} · ${escapeHtml(elements.city.value)} · ${escapeHtml(elements.role.options[elements.role.selectedIndex].text)}</p>
       </div>
-      <span class="level-pill">${escapeHtml(result.applicationLevel)}</span>
+      <span class="level-pill">${escapeHtml(applicationLevel)}</span>
     </div>
     <div class="bar" aria-hidden="true"><span style="--width:${score}%"></span></div>
-    <p>${escapeHtml(result.summary)}</p>
+    <p>${escapeHtml(summary)}</p>
   </article>`;
 
-  elements.strengths.innerHTML = renderListItems(result.matchingAdvantages);
-  elements.gaps.innerHTML = renderListItems(result.skillGaps);
+  elements.strengths.innerHTML = renderListItems(topJob.matchingAdvantages);
+  elements.gaps.innerHTML = renderListItems(topJob.skillGaps);
   elements.rewrites.innerHTML = renderRewriteItems(result.resumeSuggestions);
-  elements.bullets.innerHTML = renderBulletItems(result.bulletPoints);
+  elements.bullets.innerHTML = renderBulletItems(result.resumeSuggestions);
   elements.actionPlan.innerHTML = renderActionItems(result.actionPlan);
 }
 
@@ -213,7 +211,7 @@ async function runMatch() {
     if (!response.ok) {
       throw new Error(payload.error || "AI 匹配请求失败");
     }
-    renderAnalysis(payload.analysis);
+    renderAnalysis(payload);
   } catch (error) {
     setDial(0);
     elements.summaryTitle.textContent = "AI 匹配失败";

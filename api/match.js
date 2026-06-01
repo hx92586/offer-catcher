@@ -5,45 +5,61 @@ const analysisSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
-    matchScore: {
-      type: "number",
-      minimum: 0,
-      maximum: 100,
-      description: "Resume-to-JD match score from 0 to 100."
-    },
-    applicationLevel: {
-      type: "string",
-      enum: ["强烈推荐投递", "推荐投递", "谨慎投递", "暂不建议"],
-      description: "Recommended application level."
-    },
-    summary: {
-      type: "string",
-      description: "Concise overall conclusion in Chinese."
-    },
-    matchingAdvantages: {
+    jobs: {
       type: "array",
-      minItems: 3,
-      maxItems: 6,
-      items: { type: "string" }
-    },
-    skillGaps: {
-      type: "array",
-      minItems: 3,
-      maxItems: 6,
-      items: { type: "string" }
+      minItems: 1,
+      maxItems: 3,
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          title: {
+            type: "string",
+            description: "Job title inferred from the JD."
+          },
+          matchScore: {
+            type: "number",
+            minimum: 0,
+            maximum: 100,
+            description: "Resume-to-JD match score from 0 to 100."
+          },
+          applicationLevel: {
+            type: "string",
+            enum: ["强烈推荐投递", "推荐投递", "谨慎投递", "暂不建议"],
+            description: "Recommended application level."
+          },
+          summary: {
+            type: "string",
+            description: "Concise overall conclusion in Chinese."
+          },
+          matchingAdvantages: {
+            type: "array",
+            minItems: 3,
+            maxItems: 6,
+            items: { type: "string" }
+          },
+          skillGaps: {
+            type: "array",
+            minItems: 3,
+            maxItems: 6,
+            items: { type: "string" }
+          }
+        },
+        required: [
+          "title",
+          "matchScore",
+          "applicationLevel",
+          "summary",
+          "matchingAdvantages",
+          "skillGaps"
+        ]
+      }
     },
     resumeSuggestions: {
       type: "array",
       minItems: 3,
       maxItems: 6,
       items: { type: "string" }
-    },
-    bulletPoints: {
-      type: "array",
-      minItems: 3,
-      maxItems: 6,
-      items: { type: "string" },
-      description: "Copy-ready Chinese resume bullet points customized to the JD."
     },
     actionPlan: {
       type: "array",
@@ -53,13 +69,8 @@ const analysisSchema = {
     }
   },
   required: [
-    "matchScore",
-    "applicationLevel",
-    "summary",
-    "matchingAdvantages",
-    "skillGaps",
+    "jobs",
     "resumeSuggestions",
-    "bulletPoints",
     "actionPlan"
   ]
 };
@@ -104,7 +115,9 @@ module.exports = async function handler(request, response) {
                   "你是一个严谨的中文学生求职匹配顾问。",
                   "请比较学生简历和目标岗位 JD，输出可执行、可验证、避免空话的匹配分析。",
                   "评分必须基于 JD 要求与简历证据，不要编造简历中不存在的经历。",
-                  "所有输出使用中文。简历 bullet points 要可直接复制到简历里，尽量包含动作、工具、规模、结果或业务影响。",
+                  "所有输出使用中文。",
+                  "必须返回标准 JSON 结构：jobs、resumeSuggestions、actionPlan。",
+                  "resumeSuggestions 要尽量可直接复制到简历里，包含动作、工具、规模、结果或业务影响。",
                   "",
                   `目标方向：${targetRole || "未填写"}`,
                   `学历阶段：${degree || "未填写"}`,
@@ -122,12 +135,8 @@ module.exports = async function handler(request, response) {
         ],
         generationConfig: {
           temperature: 0.3,
-          responseFormat: {
-            text: {
-              mimeType: "application/json",
-              schema: analysisSchema
-            }
-          }
+          responseMimeType: "application/json",
+          responseSchema: analysisSchema
         }
       })
     });
@@ -144,8 +153,8 @@ module.exports = async function handler(request, response) {
       return response.status(502).json({ error: "Gemini response did not include output text." });
     }
 
-    const analysis = JSON.parse(outputText);
-    return response.status(200).json({ analysis });
+    const analysis = normalizeAnalysis(JSON.parse(outputText));
+    return response.status(200).json(analysis);
   } catch (error) {
     return response.status(500).json({ error: error.message || "Unexpected server error." });
   }
@@ -153,4 +162,12 @@ module.exports = async function handler(request, response) {
 
 function extractOutputText(payload) {
   return payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
+}
+
+function normalizeAnalysis(analysis) {
+  return {
+    jobs: Array.isArray(analysis.jobs) ? analysis.jobs : [],
+    resumeSuggestions: Array.isArray(analysis.resumeSuggestions) ? analysis.resumeSuggestions : [],
+    actionPlan: Array.isArray(analysis.actionPlan) ? analysis.actionPlan : []
+  };
 }
