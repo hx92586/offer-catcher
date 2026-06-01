@@ -7,60 +7,17 @@ const sampleResume = `教育背景：伦敦大学学院 商业分析硕士，GPA
 实习经历：互联网公司数据运营实习，负责 SQL 取数、周报看板、活动复盘，沉淀 5 个可复用指标模板。
 兴趣方向：希望从事数据分析、商业分析或产品策略岗位，偏好上海、杭州或远程。`;
 
-const jobs = [
-  {
-    title: "商业分析实习生",
-    company: "星链零售科技",
-    city: "上海",
-    type: "data",
-    skills: ["SQL", "Python", "Tableau", "Excel", "A/B Testing", "指标体系", "电商"],
-    traits: ["数据洞察", "业务复盘", "跨团队沟通"],
-    desc: "支持用户增长、商品运营和会员策略分析，负责取数、看板、实验复盘与策略建议。"
-  },
-  {
-    title: "产品经理校招",
-    company: "青橙校园服务",
-    city: "杭州",
-    type: "product",
-    skills: ["PRD", "用户研究", "原型", "竞品分析", "数据分析", "小程序"],
-    traits: ["需求拆解", "用户同理心", "项目推进"],
-    desc: "负责学生生活服务产品的需求调研、功能设计、埋点分析和版本迭代。"
-  },
-  {
-    title: "数据产品运营",
-    company: "云帆智能营销",
-    city: "深圳",
-    type: "data",
-    skills: ["SQL", "Tableau", "用户分层", "活动复盘", "CRM", "增长"],
-    traits: ["结果导向", "结构化表达", "运营策略"],
-    desc: "围绕 CRM 数据资产建设用户标签，输出增长活动策略与可视化经营分析。"
-  },
-  {
-    title: "前端开发实习生",
-    company: "北极星 AI Lab",
-    city: "北京",
-    type: "frontend",
-    skills: ["JavaScript", "React", "TypeScript", "CSS", "API", "Git"],
-    traits: ["工程实现", "交互细节", "代码质量"],
-    desc: "参与 AI 工作台 Web 端开发，维护组件库、数据可视化页面和接口联调。"
-  },
-  {
-    title: "战略咨询项目助理",
-    company: "启明咨询",
-    city: "上海",
-    type: "consulting",
-    skills: ["市场研究", "竞品分析", "访谈", "Excel", "行业报告", "PPT"],
-    traits: ["逻辑拆解", "商业敏感度", "高质量交付"],
-    desc: "支持新能源、消费与科技项目，完成桌面研究、访谈纪要、测算模型和汇报材料。"
-  }
-];
-
-const roleKeywords = {
-  data: ["SQL", "Python", "Tableau", "Excel", "A/B Testing", "机器学习", "指标", "电商", "用户分层"],
-  product: ["PRD", "用户研究", "原型", "竞品分析", "小程序", "需求", "用户旅程", "埋点"],
-  frontend: ["JavaScript", "React", "TypeScript", "CSS", "API", "Git", "组件", "前端"],
-  consulting: ["市场研究", "竞品分析", "访谈", "Excel", "行业", "PPT", "测算", "go-to-market"]
-};
+const sampleJd = `岗位：商业分析实习生
+公司：星链零售科技
+地点：上海
+岗位职责：
+1. 支持用户增长、商品运营和会员策略分析，完成 SQL 取数、指标看板和活动复盘。
+2. 结合用户行为、订单和转化数据，发现业务问题并提出增长策略。
+3. 参与 A/B Testing 方案设计，输出实验结论和运营建议。
+岗位要求：
+1. 熟练使用 SQL、Excel，掌握 Python 或 Tableau 加分。
+2. 具备电商、用户增长、CRM 或数据运营项目经验。
+3. 能用结构化方式表达分析结论，有良好的业务敏感度和沟通能力。`;
 
 const trackerKey = "offer-catcher-applications";
 const statusLabels = ["已投递", "测评中", "一面", "二面", "终面", "Offer", "已挂"];
@@ -97,8 +54,20 @@ const defaultApplications = [
   }
 ];
 
+const fallbackAnalysis = {
+  matchScore: 0,
+  applicationLevel: "等待分析",
+  summary: "输入简历文本和岗位 JD 后，AI 会生成真实匹配分析。",
+  matchingAdvantages: [],
+  skillGaps: [],
+  resumeSuggestions: [],
+  bulletPoints: [],
+  actionPlan: []
+};
+
 const elements = {
   resume: document.querySelector("#resumeInput"),
+  jd: document.querySelector("#jdInput"),
   sampleBtn: document.querySelector("#sampleBtn"),
   matchBtn: document.querySelector("#matchBtn"),
   role: document.querySelector("#targetRole"),
@@ -111,6 +80,7 @@ const elements = {
   strengths: document.querySelector("#strengthList"),
   gaps: document.querySelector("#gapList"),
   rewrites: document.querySelector("#rewriteList"),
+  bullets: document.querySelector("#bulletList"),
   actionPlan: document.querySelector("#actionPlan"),
   applicationForm: document.querySelector("#applicationForm"),
   studentName: document.querySelector("#studentName"),
@@ -126,88 +96,6 @@ const elements = {
 
 let applications = loadApplications();
 
-function tokenize(text) {
-  return text.toLowerCase();
-}
-
-function includesTerm(text, term) {
-  return tokenize(text).includes(term.toLowerCase());
-}
-
-function scoreJob(job, resume, role, city) {
-  const matchedSkills = job.skills.filter((skill) => includesTerm(resume, skill));
-  const roleHits = roleKeywords[role].filter((skill) => includesTerm(resume, skill));
-  const skillScore = matchedSkills.length / job.skills.length;
-  const roleScore = job.type === role ? 1 : Math.min(roleHits.length / Math.max(roleKeywords[role].length, 1), 0.75);
-  const cityScore = job.city === city || includesTerm(resume, job.city) || includesTerm(resume, "远程") ? 1 : 0.45;
-  const projectScore = ["项目", "实习", "提升", "分析", "模型", "调研"].filter((term) => includesTerm(resume, term)).length / 6;
-  const finalScore = Math.round((skillScore * 0.42 + roleScore * 0.25 + cityScore * 0.15 + projectScore * 0.18) * 100);
-  return { ...job, score: finalScore, matchedSkills, roleHits };
-}
-
-function renderJobs(scoredJobs) {
-  elements.jobCards.innerHTML = scoredJobs
-    .map((job) => {
-      const tags = job.skills
-        .map((skill) => `<span class="tag ${job.matchedSkills.includes(skill) ? "hit" : ""}">${skill}</span>`)
-        .join("");
-      return `<article class="job-card">
-        <div class="job-head">
-          <div>
-            <div class="job-title">${job.title}</div>
-            <p class="job-meta">${job.company} · ${job.city}</p>
-          </div>
-          <span class="score-pill">${job.score}%</span>
-        </div>
-        <div class="bar" aria-hidden="true"><span style="--width:${job.score}%"></span></div>
-        <p>${job.desc}</p>
-        <div class="tags">${tags}</div>
-        <p class="muted">匹配理由：已命中 ${job.matchedSkills.length} 项核心技能，岗位偏好${job.type === elements.role.value ? "高度一致" : "存在相邻迁移空间"}。</p>
-      </article>`;
-    })
-    .join("");
-}
-
-function renderInsights(scoredJobs, resume, role) {
-  const allHits = [...new Set(scoredJobs.flatMap((job) => job.matchedSkills))];
-  const missing = roleKeywords[role].filter((keyword) => !includesTerm(resume, keyword)).slice(0, 5);
-  const strengths = [
-    allHits.length ? `技能关键词覆盖较好：${allHits.slice(0, 7).join("、")}。` : "当前简历技能信号偏弱，需要补充工具与方法关键词。",
-    includesTerm(resume, "提升") || includesTerm(resume, "%") ? "经历中包含结果指标，具备通过量化成果证明价值的基础。" : "项目经历完整，但结果指标仍可进一步量化。",
-    includesTerm(resume, "实习") ? "已有实习经历，可作为简历首屏的可信背书。" : "项目经历可用，但建议补充实习、科研或社团中的真实协作场景。"
-  ];
-  const gaps = [
-    missing.length ? `目标方向还缺少：${missing.join("、")}。` : "目标方向核心关键词覆盖较完整，可转向表达质量优化。",
-    "岗位语言需要更贴近招聘 JD，避免只写课程名或泛泛职责。",
-    "每段经历建议形成“任务 - 方法 - 结果 - 业务影响”的闭环。"
-  ];
-
-  elements.strengths.innerHTML = strengths.map((item) => `<li>${item}</li>`).join("");
-  elements.gaps.innerHTML = gaps.map((item) => `<li>${item}</li>`).join("");
-  elements.rewrites.innerHTML = [
-    "把“负责周报看板”改为“使用 SQL 搭建 5 个运营指标模板，支持活动复盘周期从 2 天缩短至 0.5 天”。",
-    "把“参与用户调研”改为“访谈 18 名目标用户，抽象 4 类核心痛点，并转化为收藏、议价、消息提醒 3 个版本需求”。",
-    "简历顶部增加 2 行求职摘要：目标岗位、可迁移技能、最强项目结果，让筛选者 10 秒内看见匹配度。"
-  ].map((item) => `<div class="rewrite-item">${item}</div>`).join("");
-}
-
-function renderPlan(topJob, resume) {
-  const plan = [
-    ["今天", `针对「${topJob.title}」重排简历，把命中技能提前到首屏，并保留 3 个最相关项目。`],
-    ["48 小时", "按岗位 JD 补充缺失关键词，给每段经历增加一个可验证指标或业务结果。"],
-    ["本周", "准备 2 个 STAR 面试故事：一个数据/产品项目，一个跨团队协作或压力交付场景。"],
-    ["投递后", "建立投递追踪表，记录岗位来源、匹配分、跟进日期和面试反馈，持续校准策略。"]
-  ];
-
-  if (!includesTerm(resume, "portfolio") && !includesTerm(resume, "作品集")) {
-    plan.splice(2, 0, ["加分项", "整理 1 页作品集或项目复盘链接，展示分析过程、原型截图、指标口径和业务结论。"]);
-  }
-
-  elements.actionPlan.innerHTML = plan
-    .map(([time, task]) => `<li><strong>${time}</strong><span>${task}</span></li>`)
-    .join("");
-}
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -215,6 +103,125 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function setDial(score) {
+  const safeScore = Number.isFinite(score) ? Math.max(0, Math.min(100, score)) : 0;
+  elements.topScore.textContent = safeScore ? `${safeScore}%` : "--";
+  elements.dial.style.setProperty("--score", `${Math.round(safeScore * 3.6)}deg`);
+}
+
+function setLoading(isLoading) {
+  elements.matchBtn.disabled = isLoading;
+  elements.matchBtn.textContent = isLoading ? "AI 分析中..." : "开始匹配";
+}
+
+function renderInitialState() {
+  setDial(0);
+  elements.summaryTitle.textContent = "等待 AI 匹配";
+  elements.summaryText.textContent = "系统会把简历与岗位 JD 发送到后端，由 OpenAI API 返回结构化匹配分析。";
+  elements.jobCards.innerHTML = `<div class="loading-state">请粘贴岗位 JD 后点击「开始匹配」。分析结果会包含匹配度、推荐投递等级、优势、缺口和可复制简历 bullet points。</div>`;
+  elements.strengths.innerHTML = "";
+  elements.gaps.innerHTML = "";
+  elements.rewrites.innerHTML = "";
+  elements.bullets.innerHTML = "";
+  elements.actionPlan.innerHTML = "";
+}
+
+function renderAnalysis(analysis) {
+  const result = { ...fallbackAnalysis, ...analysis };
+  const score = Number(result.matchScore) || 0;
+  setDial(score);
+  elements.summaryTitle.textContent = `${result.applicationLevel} · ${score}%`;
+  elements.summaryText.textContent = result.summary || "AI 已完成简历与岗位 JD 的匹配分析。";
+
+  elements.jobCards.innerHTML = `<article class="job-card ai-card">
+    <div class="job-head">
+      <div>
+        <div class="job-title">AI 匹配结论</div>
+        <p class="job-meta">${escapeHtml(elements.degree.value)} · ${escapeHtml(elements.city.value)} · ${escapeHtml(elements.role.options[elements.role.selectedIndex].text)}</p>
+      </div>
+      <span class="level-pill">${escapeHtml(result.applicationLevel)}</span>
+    </div>
+    <div class="bar" aria-hidden="true"><span style="--width:${score}%"></span></div>
+    <p>${escapeHtml(result.summary)}</p>
+  </article>`;
+
+  elements.strengths.innerHTML = renderListItems(result.matchingAdvantages);
+  elements.gaps.innerHTML = renderListItems(result.skillGaps);
+  elements.rewrites.innerHTML = renderRewriteItems(result.resumeSuggestions);
+  elements.bullets.innerHTML = renderBulletItems(result.bulletPoints);
+  elements.actionPlan.innerHTML = renderActionItems(result.actionPlan);
+}
+
+function renderListItems(items) {
+  return ensureArray(items).map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+}
+
+function renderRewriteItems(items) {
+  const list = ensureArray(items);
+  if (!list.length) return `<div class="rewrite-item">暂无建议。请补充更完整的简历或岗位 JD 后重试。</div>`;
+  return list.map((item) => `<div class="rewrite-item">${escapeHtml(item)}</div>`).join("");
+}
+
+function renderBulletItems(items) {
+  const list = ensureArray(items);
+  if (!list.length) return `<div class="rewrite-item">暂无可复制 bullet。请补充项目经历、实习经历和岗位要求后重试。</div>`;
+  return list
+    .map((item) => `<div class="bullet-item">
+      <span>${escapeHtml(item)}</span>
+      <button class="copy-btn" type="button" data-copy="${escapeHtml(item)}">复制</button>
+    </div>`)
+    .join("");
+}
+
+function renderActionItems(items) {
+  const list = ensureArray(items);
+  if (!list.length) return `<li><strong>下一步</strong><span>根据 AI 建议补齐缺口，再投递该岗位。</span></li>`;
+  return list.map((item, index) => `<li><strong>${index + 1}</strong><span>${escapeHtml(item)}</span></li>`).join("");
+}
+
+function ensureArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+async function runMatch() {
+  const resume = elements.resume.value.trim();
+  const jd = elements.jd.value.trim();
+  if (!resume || !jd) {
+    elements.summaryTitle.textContent = "请补充简历和岗位 JD";
+    elements.summaryText.textContent = "真实 AI 匹配需要同时读取学生简历和目标岗位 JD。";
+    return;
+  }
+
+  setLoading(true);
+  elements.jobCards.innerHTML = `<div class="loading-state">OpenAI 正在分析简历与 JD，请稍等。</div>`;
+
+  try {
+    const response = await fetch("/api/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        resume,
+        jobDescription: jd,
+        targetRole: elements.role.options[elements.role.selectedIndex].text,
+        degree: elements.degree.value,
+        city: elements.city.value
+      })
+    });
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "AI 匹配请求失败");
+    }
+    renderAnalysis(payload.analysis);
+  } catch (error) {
+    setDial(0);
+    elements.summaryTitle.textContent = "AI 匹配失败";
+    elements.summaryText.textContent = error.message;
+    elements.jobCards.innerHTML = `<div class="loading-state">${escapeHtml(error.message)}。请确认 Vercel 环境变量 OPENAI_API_KEY 已配置，然后重新部署。</div>`;
+  } finally {
+    setLoading(false);
+  }
 }
 
 function loadApplications() {
@@ -313,30 +320,6 @@ function deleteApplication(id) {
   renderTracker();
 }
 
-function runMatch() {
-  const resume = elements.resume.value.trim();
-  if (!resume) {
-    elements.summaryTitle.textContent = "请先输入简历文本";
-    elements.summaryText.textContent = "可以点击左侧示例快速体验，也可以粘贴自己的简历内容。";
-    return;
-  }
-
-  const scoredJobs = jobs
-    .map((job) => scoreJob(job, resume, elements.role.value, elements.city.value))
-    .sort((a, b) => b.score - a.score);
-  const topJob = scoredJobs[0];
-  const dialDegrees = Math.round(topJob.score * 3.6);
-
-  elements.topScore.textContent = `${topJob.score}%`;
-  elements.dial.style.setProperty("--score", `${dialDegrees}deg`);
-  elements.summaryTitle.textContent = `最推荐：${topJob.title}`;
-  elements.summaryText.textContent = `${topJob.company} 与当前画像匹配最高。建议优先投递，并围绕岗位关键词优化简历首屏和项目表达。`;
-
-  renderJobs(scoredJobs);
-  renderInsights(scoredJobs, resume, elements.role.value);
-  renderPlan(topJob, resume);
-}
-
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".tab, .tab-panel").forEach((node) => node.classList.remove("active"));
@@ -347,12 +330,21 @@ document.querySelectorAll(".tab").forEach((tab) => {
 
 elements.sampleBtn.addEventListener("click", () => {
   elements.resume.value = sampleResume;
+  elements.jd.value = sampleJd;
   elements.role.value = "data";
   elements.city.value = "上海";
-  runMatch();
+  renderInitialState();
 });
 
 elements.matchBtn.addEventListener("click", runMatch);
+elements.bullets.addEventListener("click", async (event) => {
+  if (!event.target.classList.contains("copy-btn")) return;
+  await navigator.clipboard.writeText(event.target.dataset.copy);
+  event.target.textContent = "已复制";
+  window.setTimeout(() => {
+    event.target.textContent = "复制";
+  }, 1200);
+});
 elements.applicationForm.addEventListener("submit", addApplication);
 elements.applicationList.addEventListener("change", (event) => {
   if (!event.target.classList.contains("status-select")) return;
@@ -362,6 +354,8 @@ elements.applicationList.addEventListener("click", (event) => {
   if (!event.target.classList.contains("delete-btn")) return;
   deleteApplication(event.target.closest(".application-card").dataset.id);
 });
+
 elements.resume.value = sampleResume;
-runMatch();
+elements.jd.value = sampleJd;
+renderInitialState();
 renderTracker();

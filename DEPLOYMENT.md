@@ -1,6 +1,7 @@
 # Offer 捕手 Vercel 部署步骤
 
 当前项目是纯静态网页，入口文件为 `index.html`，不需要构建产物目录。
+项目同时包含一个 Vercel Serverless API：`api/match.js`，用于在服务端安全调用 OpenAI API。
 
 ## 已完成
 
@@ -12,14 +13,28 @@
 
 ## 部署方式 A：使用 Vercel CLI
 
-这些命令需要你在本机终端手动执行，因为它们需要联网、安装 CLI、登录 Vercel，并把项目文件上传到 Vercel。
+这些命令需要你在本机终端手动执行，因为它们需要联网、登录 Vercel，并配置 OpenAI API Key。
 
 ```bash
 cd /Users/hx/Documents/offer捕手
-npm install -g vercel
-vercel login
+vercel env add OPENAI_API_KEY production
 vercel --prod
 ```
+
+如果本机还没有安装或登录 Vercel CLI，再执行：
+
+```bash
+npm install -g vercel
+vercel login
+```
+
+可选：如果你想覆盖默认模型，可以添加：
+
+```bash
+vercel env add OPENAI_MODEL production
+```
+
+默认模型为 `gpt-4o-mini`。
 
 首次执行 `vercel --prod` 时，建议按以下方式回答：
 
@@ -69,7 +84,8 @@ git push -u origin main
 - `package.json` 存在，脚本包含 `dev`、`build`、`deploy`。
 - `vercel.json` 已明确设置 `outputDirectory` 为 `.`，让 Vercel 从项目根目录发布静态网页。
 - `vercel.json` 仅设置静态站点基础响应头和 URL 风格，不依赖服务端函数。
-- 项目不依赖外部构建工具，不需要 `npm install` 即可运行页面。
+- `api/match.js` 通过 `process.env.OPENAI_API_KEY` 读取密钥，前端不会暴露 API Key。
+- 项目不依赖外部构建工具，不需要 `npm install` 即可运行页面；AI 分析需要 Vercel Serverless 环境。
 
 ## 如果出现 public 目录错误
 
@@ -105,5 +121,23 @@ Project Settings -> Build & Development Settings -> Output Directory
 
 1. 首页能打开并显示「Offer 捕手」。
 2. 点击「投递追踪」，能看到 Joyce 27届秋招样例。
-3. 新增一条投递记录后刷新页面，记录仍保留。
-4. 切换「岗位匹配 / 简历优化 / 行动清单」均正常。
+3. 在首页输入简历和岗位 JD，点击「开始匹配」，能看到 AI 匹配评分和简历建议。
+4. 新增一条投递记录后刷新页面，记录仍保留。
+5. 切换「岗位匹配 / 简历优化 / 行动清单」均正常。
+
+## OpenAI API 失败排查
+
+如果页面提示 `Missing OPENAI_API_KEY environment variable`，执行：
+
+```bash
+vercel env add OPENAI_API_KEY production
+vercel --prod
+```
+
+如果提示模型不可用，执行：
+
+```bash
+vercel env add OPENAI_MODEL production
+```
+
+填入你账号可用的模型，例如 `gpt-4o-mini`，然后重新部署。

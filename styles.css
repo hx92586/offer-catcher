@@ -143,6 +143,10 @@ textarea {
   line-height: 1.58;
 }
 
+.jd-textarea {
+  min-height: 180px;
+}
+
 select:focus,
 input:focus,
 textarea:focus {
@@ -373,6 +377,59 @@ ul {
   line-height: 1.6;
 }
 
+.bullet-box {
+  margin-top: 14px;
+}
+
+.bullet-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #dce8e0;
+  border-radius: 8px;
+  background: #fbfcfa;
+  line-height: 1.6;
+}
+
+.copy-btn {
+  height: 34px;
+  padding: 0 12px;
+  color: var(--green-dark);
+  background: var(--mint);
+}
+
+.copy-btn:hover {
+  color: white;
+  background: var(--green);
+}
+
+.ai-card {
+  grid-column: 1 / -1;
+}
+
+.level-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  color: #0f4328;
+  background: var(--mint);
+  font-weight: 900;
+}
+
+.loading-state {
+  padding: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.72);
+}
+
 .action-list {
   display: grid;
   gap: 12px;
@@ -499,7 +556,8 @@ ul {
 
 @media (max-width: 560px) {
   .field-grid,
-  .actions {
+  .actions,
+  .bullet-item {
     grid-template-columns: 1fr;
   }
 
