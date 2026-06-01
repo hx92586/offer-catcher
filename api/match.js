@@ -3,7 +3,6 @@ const DEFAULT_MODEL = "gemini-2.5-flash";
 
 const analysisSchema = {
   type: "object",
-  additionalProperties: false,
   properties: {
     jobs: {
       type: "array",
@@ -11,7 +10,6 @@ const analysisSchema = {
       maxItems: 3,
       items: {
         type: "object",
-        additionalProperties: false,
         properties: {
           title: {
             type: "string",
